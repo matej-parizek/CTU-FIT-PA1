@@ -49,7 +49,10 @@ int prime(long num){
     if(num==1){
         return 0;
     }
-    for (long int i = 2; i <= sqrt(num); i++)
+    if(num%2==0){
+        return 0;
+    }
+    for (long int i = 3; i <= sqrt(num); i+=2)
     {
         if(num%i==0){
             return 0;

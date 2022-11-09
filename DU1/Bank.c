@@ -50,7 +50,7 @@ void cal(double deb, double kred){
         }
         prevD=day;
     }
-    printf("%.2lf\n",credit);
+    printf("Zustatek: %.2lf\n",credit);
 }
 
 double rounded(double credit){

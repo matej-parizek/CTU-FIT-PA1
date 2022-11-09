@@ -19,8 +19,11 @@ int isLeapYear(int y){
     return leap;
 }
 
-/*return days in month
-@isLeapYear() return 1 if is leap year */
+/**
+ * return days in month
+ * @param[in] 
+ * @return number of day in month
+*/
 int monthDays(int m,int y){
     if (m==2){
         if(isLeapYear(y)==0)
@@ -100,44 +103,57 @@ int control(int y1, int m1, int d1, int h1, int i1,
     return 1;   
 }
 
+void calculation (int y1, int m1, int d1, int h1, int i1,
+            int y2, int m2, int d2, int h2, int i2, long long *b1, long long *b2){
+    
+
+    long long int days1= (numberDaysByYear(y1)+ numberDayByMonth(m1,y1)+d1);
+    long long int days2= (numberDaysByYear(y2)+ numberDayByMonth(m2,y2)+d2);
+    //sundays until the day
+    long long int sunday2=((days2-1)/7);
+    long long int sunday1 =((days1-1)/7);
+
+    long long int plusHour= (days2-1)*156 + nullHour(h2)-sunday2*156;
+    long long int plusMinutes= (days2 -1)*240 +(h2)*10 + nullMinute(i2)-sunday2*240;
+    if(days2%7==0){
+        plusHour=(days2-1)*156 -sunday2*156;
+        plusMinutes=(days2 -1)*240 - sunday2*240;
+    } 
+    int hour=h1%12;
+    if(hour==0)
+        hour=12;
+    if(i1!=0)
+        hour=0;
+    long long  int minusHour = nullHour(h1)-sunday1*156-hour;
+    
+    int minute=i1/15;
+    if(minute==0)
+        minute=4;
+    if(i1%15!=0)
+        minute=0;
+    long long int minusMinutes=(h1)*10 + nullMinute(i1)-sunday1*240 - minute;
+    if(days1%7==0){
+        minusHour=-sunday1*156;
+        minusMinutes=-sunday1*240;
+    }
+    *b2=plusHour - ((days1-1)*156 +minusHour);
+    *b1=plusMinutes -((days1-1)*240 + minusMinutes);
+    return;
+}
+
+/**
+ * @todo function for sum the bells
+ * 
+*/
 int bells ( int y1, int m1, int d1, int h1, int i1,
             int y2, int m2, int d2, int h2, int i2,
             long long int * b1, long long int * b2 ){
     if(control(y1,m1,d1,h1,i1,y2,m2,d2,h2,i2)==0){
         return 0;
     }
-    long int days1= (numberDaysByYear(y1)+ numberDayByMonth(m1,y1)+d1);
-    long int days2= (numberDaysByYear(y2)+ numberDayByMonth(m2,y2)+d2);
-    //number of Sunday in interval
-    long long int sunday2=(long long int)(days2/7);
-    long long int sunday1 =(long long int)(days1/7);
-
-    long long int bellh1= days1*156 +nullHour(h1) - sunday1*156;
-    long long int bellh2= days2*156 + nullHour(h2) - sunday2*156;
-    int min=i1/15;
-    if (min==0)
-    {
-        min=4;
-    }
-    
-    long long int bellm1 = days1*240 + h1*10 + nullMinute(i1)-sunday1*240-min ;
-    long long int bellm2 = days2*240 + h2*10 + nullMinute(i2)-sunday2*240;
-    if(days1%7==0){
-        bellm1=days1*240 - (sunday1-1)*240;
-        bellh1=days1*156  - (sunday1-1)*156;
-    }
-    if(days2%7==0){
-        bellm2=days2*240 - (sunday2-1)*240;
-        bellh2=days2*156  - (sunday2-1)*156;
-    }
-    if(((h1==0 && i1==0 )&&(h1!=h2))){
-        bellh1-=12;
-    }
-    if((h1==h2 && i1==i2) && days1%7!=0 && days2%7!=0 ){
-        bellh1-=12;
-    }
-    *b1=bellm2 - bellm1;
-    *b2=bellh2 - bellh1;
+    calculation(y1, m1, d1, h1,i1,
+            y2,m2, d2,h2, i2,
+            b1, b2 );
     return 1 ;
   
 }
@@ -146,9 +162,7 @@ int bells ( int y1, int m1, int d1, int h1, int i1,
 int main ( int argc, char * argv [] )
 {
   long long int b1, b2; 
-  printf("%d\n", bells ( 2000, 12, 28, 0, 0, 2000, 12, 28, 0, 0, &b1, &b2 ));
-  printf("%lld %lld\n",b1,b2);
-  assert ( bells ( 2022, 10,  1, 13, 15,
+ assert ( bells ( 2022, 10,  1, 13, 15,
                    2022, 10,  1, 18, 45, &b1, &b2 ) == 1
            && b1 == 56
            && b2 == 20 );
@@ -216,6 +230,13 @@ int main ( int argc, char * argv [] )
                    2004,  2, 29, 12,  0, &b1, &b2 ) == 1
            && b1 == 0
            && b2 == 0 );
+  assert ( bells ( 2000, 12, 28, 0, 0, 2000, 12, 28, 0, 0, &b1, &b2 )==1 
+            && b1==4
+            &&b2==12);
+  assert(bells ( 1929, 1, 8, 13, 19, 2079845, 9, 23, 15, 21, &b1, &b2 )==1 
+            && b1==156125411780
+            && b2==101481517649);
+    
   return EXIT_SUCCESS;
 }
 #endif /* __PROGTEST__ */

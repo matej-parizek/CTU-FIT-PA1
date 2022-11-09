@@ -130,7 +130,7 @@ int bells ( int y1, int m1, int d1, int h1, int i1,
         bellm2=days2*240 - (sunday2-1)*240;
         bellh2=days2*156  - (sunday2-1)*156;
     }
-    if((h1==0 && i1==0)){
+    if(((h1==0 && i1==0 )&&(h1!=h2))){
         bellh1-=12;
     }
     if((h1==h2 && i1==i2) && days1%7!=0 && days2%7!=0 ){
@@ -146,6 +146,8 @@ int bells ( int y1, int m1, int d1, int h1, int i1,
 int main ( int argc, char * argv [] )
 {
   long long int b1, b2; 
+  printf("%d\n", bells ( 2000, 12, 28, 0, 0, 2000, 12, 28, 0, 0, &b1, &b2 ));
+  printf("%lld %lld\n",b1,b2);
   assert ( bells ( 2022, 10,  1, 13, 15,
                    2022, 10,  1, 18, 45, &b1, &b2 ) == 1
            && b1 == 56

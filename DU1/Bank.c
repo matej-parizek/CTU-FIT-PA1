@@ -32,7 +32,7 @@ void cal(double deb, double kred){
     while (1){
         int r = scanf("%d , %lf", &day, &money);
         // days conditions + input conditions
-        if(prevD>=day || r<2 || r==EOF ){
+        if(prevD>=day || r<2 || r==EOF || day<0 ){
             printf("Nespravny vstup.\n");
             return;
         }

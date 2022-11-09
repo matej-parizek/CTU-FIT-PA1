@@ -22,7 +22,7 @@ int input(int arr[] ,int *counter){
 
 void sumArray(const int arr[], int counter, int arrSum[], int *count){
     long int sum=0;
-    for (int i = 0; i < counter +1; i++)
+    for (int i = 0; i < counter -1; i++)
     {
         sum=arr[i];
         for(int j=i+1; j<counter; j++){

@@ -63,8 +63,8 @@ int numberDayByMonth(int m, int y){
 
 //null time for hour
 int nullHour(int h){
-    int bell = 12;
-    for(int i=h; i>0; i--){
+    int bell = 0;
+    for(int i=0;i<=h; i++){
         if(i%12==0)
             bell+=12;
         else
@@ -72,17 +72,14 @@ int nullHour(int h){
     }
     return bell;
 }
-
-//null time for minutes
-int nullMinutes(int min){
-    int bell=4;
-    int i=min;
-    for (; i >= 15; i-=15)
-    {
+int nullMinute(int m){
+    int bell = 4;
+    for(int i=0; i<=m; i+=15){
         bell+=i/15;
     }
     return bell;
 }
+//null time for minutes
 
 //control inputs
 int control(int y1, int m1, int d1, int h1, int i1,
@@ -112,39 +109,35 @@ int bells ( int y1, int m1, int d1, int h1, int i1,
     long int days1= (numberDaysByYear(y1)+ numberDayByMonth(m1,y1)+d1);
     long int days2= (numberDaysByYear(y2)+ numberDayByMonth(m2,y2)+d2);
     //number of Sunday in interval
-    long long int sunday=(long int)(days2/7)-(long int)(days1/7);
-    //number of days in interval
-    long long int days=days2-days1;
-    int minute=i1/15;
-    int hour=h1%12;
-    if (i1/15==0)
-        minute=4;
-    if (h1%12==0)
-        hour =12;
-    if(h1>12){
-        hour-=1;
-    }
-    if(h1 ==h2 && i1!=i2){
-        hour =0;
+    long long int sunday2=(long long int)(days2/7);
+    long long int sunday1 =(long long int)(days1/7);
+
+    long long int bellh1= days1*156 +nullHour(h1) - sunday1*156;
+    long long int bellh2= days2*156 + nullHour(h2) - sunday2*156;
+    int min=i1/15;
+    if (min==0)
+    {
+        min=4;
     }
     
-    long long int nullI1= h1*10 +nullMinutes(i1)-minute;
-    long long int nullI2= h2*10 +nullMinutes(i2);
-    long long int nullH1=nullHour(h1)-hour;
-    long long int nullH2=nullHour(h2);
+    long long int bellm1 = days1*240 + h1*10 + nullMinute(i1)-sunday1*240-min ;
+    long long int bellm2 = days2*240 + h2*10 + nullMinute(i2)-sunday2*240;
     if(days1%7==0){
-        nullI1=0;
-        nullH1=0;
-        sunday+=1;
+        bellm1=days1*240 - (sunday1-1)*240;
+        bellh1=days1*156  - (sunday1-1)*156;
     }
     if(days2%7==0){
-        nullH2=0;
-        nullI2=0;
-        if(sunday>0)
-            sunday-=1;
-    } 
-    *b1=240*days -  nullI1 + nullI2 -sunday*240;
-    *b2=156*days + nullH2 - nullH1-sunday*156;
+        bellm2=days2*240 - (sunday2-1)*240;
+        bellh2=days2*156  - (sunday2-1)*156;
+    }
+    if((h1==0 && i1==0)){
+        bellh1-=12;
+    }
+    if((h1==h2 && i1==i2) && days1%7!=0 && days2%7!=0 ){
+        bellh1-=12;
+    }
+    *b1=bellm2 - bellm1;
+    *b2=bellh2 - bellh1;
     return 1 ;
   
 }
@@ -153,7 +146,6 @@ int bells ( int y1, int m1, int d1, int h1, int i1,
 int main ( int argc, char * argv [] )
 {
   long long int b1, b2; 
-
   assert ( bells ( 2022, 10,  1, 13, 15,
                    2022, 10,  1, 18, 45, &b1, &b2 ) == 1
            && b1 == 56

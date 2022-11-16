@@ -87,7 +87,7 @@ int main(void){
         return 0;
     }
     int count =findMin(flyed,dist, counter);
-    printf("Vzdalenost nejblizsich letadel: %lf\n",dist[0].lenght);
+    printf("Vzdalenost nejblizsich letadel: %lf\n",sqrt(dist[0].lenght));
     printf("Nalezenych dvojic: %d\n", count);
     for (int i = 0; i < count; i++)
     {

@@ -3,23 +3,37 @@
 #include <string.h>
 #include <math.h>
 
-#define StartMax 4
+#define START_MAX 4
 
-
+/**
+ * @struct FLY
+ *comprise data of input
+ * pozision of plane and name of plane
+*/
 typedef struct{
     double x;
     double y;
     char plane[200];
 }FLY;
 
+/**
+ * @struct DISTANCE
+ * comprise data of output
+ * minimum distance, name of planes in colision
+*/
 typedef struct{
     double minimum;
     char plane1[201];
     char plane2[201];
 }DISTANCE;
 
+/**
+ * read input data form cmp
+ * @return array of @struct FLY
+ * @return 1 wrong input; 0 good input
+*/
 int input(FLY **flyed,int *counter){
-    int max=StartMax;
+    int max=START_MAX;
     while (1)
     {
         if(max==*counter){
@@ -37,10 +51,12 @@ int input(FLY **flyed,int *counter){
         *counter+=1;
     }
 
-    
     return 0;
 }
 
+/**
+ * @return elements to @struct DISTANCE
+*/
 void addDis(DISTANCE * disc, FLY  name1, FLY name2){
     strcpy(disc->plane1,name1.plane);
     strcpy(disc->plane2,name2.plane);
@@ -49,12 +65,24 @@ void addDis(DISTANCE * disc, FLY  name1, FLY name2){
     disc->minimum=sqrt(n1+n2);
     return;
 }
+
+/**
+ * @return added elements to @struct FLY
+ * @brief using for predefine minimum distance
+*/
 void add(FLY number1, FLY number2, FLY * min1, FLY * min2){
     min1->x=number1.x;
     min1->y=number1.y;
     min2->x=number2.x;
     min2->y=number2.y;
 }
+
+/**
+ * @struct FLY number1 and number2 are one digit
+ * @struct FLY number3 and number4 are second digit
+ * compare datatype double
+ * @return 1 numbers are equal; 0 are not equal
+*/
 int equale (FLY number1, FLY number2,FLY number3, FLY number4)
 {
     double n1 = (pow(number1.x - number2.x,2));
@@ -63,16 +91,29 @@ int equale (FLY number1, FLY number2,FLY number3, FLY number4)
     double n4 = (pow(number3.y - number4.y,2));
     return (fabs((n1+n2) - (n3+n4)) <= fabs((n1+n2) + (n3+n4))*10000*__DBL_EPSILON__);
 }
-int smaller(FLY number1, FLY number2,FLY number3, FLY number4){
+
+/**
+ * @struct FLY number1 and number2 are one digit
+ * @struct FLY min1 and min2 are second digit
+ * compare datatype double
+ * @return 1 number is smaller than min ; 0 are not smaller
+*/
+int smaller(FLY number1, FLY number2,FLY min1, FLY min2){
     double n1 = (pow(number1.x - number2.x,2));
     double n2 = (pow(number1.y - number2.y,2));
-    double n3 = (pow(number3.x - number4.x,2));
-    double n4 = (pow(number3.y - number4.y,2));
+    double n3 = (pow(min1.x - min2.x,2));
+    double n4 = (pow(min1.y - min2.y,2));
     return ((n1+n2) < (n3+n4));
 }
 
+/**
+ * @brief finding all colision plane
+ * @return count of colision plane
+ * @return array of @struct DISTANCE
+ *  containig name of planes in colision 
+*/
 int findMin(FLY *flyed,DISTANCE **dist,int counter){
-    int max=StartMax;
+    int max=START_MAX;
     int count=0;
     FLY min1;
     FLY min2;
@@ -89,7 +130,7 @@ int findMin(FLY *flyed,DISTANCE **dist,int counter){
                 count=0;
                 add(flyed[i],flyed[j],&min1,&min2);
             }
-            //printf("%d",equale(flyed[i],flyed[j],min1,min2));
+
             if(equale(flyed[i],flyed[j],min1,min2)){
                 addDis(&dist[0][count],flyed[i],flyed[j]);
                 count+=1;
@@ -100,6 +141,9 @@ int findMin(FLY *flyed,DISTANCE **dist,int counter){
     return count;
 }
 
+/**
+ * @brief print all the planes in colision
+*/
 void print(DISTANCE *flyed,int counter){
     for (int i = 0; i < counter; i++){
         printf("%s - %s\n",flyed[i].plane1,flyed[i].plane2);    
@@ -109,8 +153,8 @@ void print(DISTANCE *flyed,int counter){
 
 int main(void){
     int counter=0;
-    FLY *flyed=(FLY*)malloc(sizeof(FLY)*StartMax);
-    DISTANCE *dist=(DISTANCE *)malloc(sizeof(DISTANCE)*StartMax);
+    FLY *flyed=(FLY*)malloc(sizeof(FLY)*START_MAX);
+    DISTANCE *dist=(DISTANCE *)malloc(sizeof(DISTANCE)*START_MAX);
     printf("Pozice letadel:\n");
     if(input(&flyed,&counter)==1 || counter<2){
         printf("Nespravny vstup.\n");

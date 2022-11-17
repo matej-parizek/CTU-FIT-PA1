@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define StartMax 6
+#define StartMax 4
 
 
 typedef struct{
@@ -27,12 +27,16 @@ int input(FLY **flyed,int *counter){
             *flyed=(FLY *)realloc(*flyed,max*sizeof(FLY));
         }
         int r= scanf("%lf , %lf : %199s",&flyed[0][*counter].x,&flyed[0][*counter].y,flyed[0][*counter].plane);
+        char c =getchar();
+        if(c!= ' ' && c!='\n' && c!=EOF)
+            r=0;
         if(r==EOF)
             return 0;
         if(r!=3)
             return 1;
         *counter+=1;
     }
+
     
     return 0;
 }
@@ -45,30 +49,48 @@ void addDis(DISTANCE * disc, FLY  name1, FLY name2){
     disc->minimum=sqrt(n1+n2);
     return;
 }
-double sizeDis(FLY number1, FLY number2){
+void add(FLY number1, FLY number2, FLY * min1, FLY * min2){
+    min1->x=number1.x;
+    min1->y=number1.y;
+    min2->x=number2.x;
+    min2->y=number2.y;
+}
+int equale (FLY number1, FLY number2,FLY number3, FLY number4)
+{
     double n1 = (pow(number1.x - number2.x,2));
     double n2 = (pow(number1.y - number2.y,2));
-    return sqrt(n1+n2);
+    double n3 = (pow(number3.x - number4.x,2));
+    double n4 = (pow(number3.y - number4.y,2));
+    return (fabs((n1+n2) - (n3+n4)) <= fabs((n1+n2) + (n3+n4))*10000*__DBL_EPSILON__);
+}
+int smaller(FLY number1, FLY number2,FLY number3, FLY number4){
+    double n1 = (pow(number1.x - number2.x,2));
+    double n2 = (pow(number1.y - number2.y,2));
+    double n3 = (pow(number3.x - number4.x,2));
+    double n4 = (pow(number3.y - number4.y,2));
+    return ((n1+n2) < (n3+n4));
 }
 
 int findMin(FLY *flyed,DISTANCE **dist,int counter){
-    double min = sizeDis(flyed[0],flyed[1]);
     int max=StartMax;
     int count=0;
-    
+    FLY min1;
+    FLY min2;
+    add(flyed[1],flyed[0],&min1,&min2);
     for(int i=0; i<counter-1; i++){
-        for(int j = i+1; j < counter; j++)
-        {
-            long int lenght=sizeDis(flyed[i],flyed[j]);
+        for(int j = i+1; j < counter; j++){
+            
             if(max==count){
                 max*=2;
                 *dist=(DISTANCE*)realloc(*dist,sizeof(DISTANCE)*max);
             }
-            if(lenght < min){
+
+            if(smaller(flyed[i],flyed[j],min1,min2) && equale(flyed[i],flyed[j],min1,min2) !=1){
                 count=0;
-                min=lenght;
+                add(flyed[i],flyed[j],&min1,&min2);
             }
-            if(min==lenght){
+            //printf("%d",equale(flyed[i],flyed[j],min1,min2));
+            if(equale(flyed[i],flyed[j],min1,min2)){
                 addDis(&dist[0][count],flyed[i],flyed[j]);
                 count+=1;
             }

@@ -37,17 +37,18 @@ int input(FLY **flyed,int *counter){
     return 0;
 }
 
-void addDis(DISTANCE * disc, const char *name1,const char *name2, double size){
-    strcpy(disc->plane1,name1);
-    strcpy(disc->plane2,name2);
-    disc->minimum=size;
+void addDis(DISTANCE * disc, FLY  name1, FLY name2){
+    strcpy(disc->plane1,name1.plane);
+    strcpy(disc->plane2,name2.plane);
+    double n1 = (pow(name1.x - name2.x,2));
+    double n2 = (pow(name1.y - name2.y,2));
+    disc->minimum=sqrt(n1+n2);
     return;
 }
-
 double sizeDis(FLY number1, FLY number2){
     double n1 = (pow(number1.x - number2.x,2));
     double n2 = (pow(number1.y - number2.y,2));
-    return n1+n2;
+    return sqrt(n1+n2);
 }
 
 int findMin(FLY *flyed,DISTANCE **dist,int counter){
@@ -58,7 +59,7 @@ int findMin(FLY *flyed,DISTANCE **dist,int counter){
     for(int i=0; i<counter-1; i++){
         for(int j = i+1; j < counter; j++)
         {
-            double lenght=sizeDis(flyed[i],flyed[j]);
+            long int lenght=sizeDis(flyed[i],flyed[j]);
             if(max==count){
                 max*=2;
                 *dist=(DISTANCE*)realloc(*dist,sizeof(DISTANCE)*max);
@@ -68,7 +69,7 @@ int findMin(FLY *flyed,DISTANCE **dist,int counter){
                 min=lenght;
             }
             if(min==lenght){
-                addDis(&dist[0][count],flyed[i].plane,flyed[j].plane,lenght);
+                addDis(&dist[0][count],flyed[i],flyed[j]);
                 count+=1;
             }
         }
@@ -96,7 +97,7 @@ int main(void){
         return 0;
     }
     int count = findMin(flyed,&dist,counter);
-    printf("Vzdalenost nejblizsich letadel: %lf\n",sqrt(dist[0].minimum));
+    printf("Vzdalenost nejblizsich letadel: %lf\n",dist[0].minimum);
     printf("Nalezenych dvojic: %d\n",count);
     print(dist,count);
     free(flyed);

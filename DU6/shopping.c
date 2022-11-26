@@ -2,21 +2,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-/** @return 100 from main, cant open file */
-
 /*Linked list for products*/
 typedef struct Products
 {
     char protuct[201];
     struct Products* next;
 }Products_t;
-
-void newProduct(Products_t * products,char *product)
+/**Add product to LinkedList*/
+void newProduct(Products_t** products,char *product)
 {
     Products_t* temp=(Products_t*)malloc(sizeof(Products_t));
     strcpy(temp->protuct,product);
-    temp->next=NULL;
-    products->next=temp;
+    temp->next=*products;
+    *products=temp;
+}
+
+/**Clear LINKED LIST*/
+void clearLinkedList(Products_t* products)
+{
+    while (products!=NULL)
+    {
+        Products_t *temp=products->next;
+        free(products);
+        products=temp;
+    }
+    
 }
 /******************************************************************/
 
@@ -25,7 +35,7 @@ void newProduct(Products_t * products,char *product)
 typedef struct Node
 {
     int regals;
-    char **protucts;
+    Products_t* products;
     struct Node* next;
 }Node_t;
 
@@ -42,6 +52,7 @@ Node_t* newNode(int regal)
 {
     Node_t* node=(Node_t *)malloc(sizeof(Node_t));
     node->regals=regal;
+    node->products=NULL;
     node->next=NULL;
     return node;
 }
@@ -69,12 +80,29 @@ void add(Quote_t* quote, int regal)
         quote->first = quote->last= node;
         return;
     }
+
     quote->last->next=node;
     quote->last=node;
     return;
 }
 
-
+/**free memory from quote*/
+void clearQuote(Quote_t * quote)
+{
+    if(quote->first==NULL)
+    {
+        free(quote);
+        return;
+    }
+    while (quote->first!=NULL)
+    {
+        Node_t* temp = quote->first->next;
+        clearLinkedList(quote->first->products);
+        free(quote->first);
+        quote->first=temp;
+    }
+    free(quote);
+}
 /************************************************************************************/
 
 
@@ -86,7 +114,7 @@ void add(Quote_t* quote, int regal)
 
 
 
-int readFile(Quote_t** quote, FILE *file){
+int readRegals(Quote_t** quote, FILE *file){
     char buffer[201];
     int productsCount=0;
     int regal=-1;
@@ -96,29 +124,19 @@ int readFile(Quote_t** quote, FILE *file){
             break;
         if(buffer[0]=='#')
         {
-            //add(*quote,regal);
+            add(*quote,regal);
             productsCount=0;
             regal++;
             continue;
         }
-        printf("%d %s",regal,buffer);
+        newProduct(&(*quote)->last->products,buffer);
         productsCount++;
-    }
+    }    
     return 0;
 }
 
-void clearQuote(Quote_t * quote)
-{
-    while (quote->first->next!=NULL)
-    {
-        Node_t* temp = quote->first->next;
-        free(quote->first);
-        quote->first=temp;
-    }
-    free(quote->first);
-    free(quote);
-}
 
+/** @return 100 from main, cant open file */
 int main(int argc,char *argv[])
 {
     char * filename=argv[1];
@@ -128,14 +146,14 @@ int main(int argc,char *argv[])
         fprintf(stderr,"Neotevrel se soubor");
         return 100;
     }
+
     Quote_t* quote=creatQuote();
     //read file
-    readFile(&quote,file);
-
+    readRegals(&quote,file);   
+    
     fclose(file);
 
     //free all memory
     clearQuote(quote);
-    
     return 0;
 }

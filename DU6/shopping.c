@@ -7,6 +7,7 @@
 typedef struct Products
 {
     char protuct[201];
+    int data;
     struct Products* next;
 }Products_t;
 /**Add product to LinkedList*/
@@ -85,6 +86,34 @@ void add(Quote_t* quote, int regal)
     quote->last->next=node;
     quote->last=node;
     return;
+}
+
+void addSort(Quote_t* quote, int regal)
+{
+    Node_t* node=newNode(regal);
+    if(!quote->last)
+    {
+        quote->first=quote->last=node;
+        return;
+    }
+    if(quote->first->regals > regal)
+    {
+        node->next=quote->first;
+        quote->first=node;
+        return;
+    }
+
+    //sort
+    Quote_t temp=*quote;
+    while (temp.first->next!=NULL && temp.first->next->regals<regal)
+    {
+        temp.first=temp.first->next;
+    }
+    if(temp.first->next!=NULL)
+    {
+        node->next=temp.first->next;
+    }
+    temp.first->next=node;
 }
 
 /**free memory from quote*/
@@ -181,7 +210,7 @@ void commodity(Quote_t* quote,FILE *file)
     {
         if(buffer[0]=='\n')
         {
-            //commodity(quote,file);
+            commodity(quote,file);
             return;
         } 
         char string[200];
@@ -215,8 +244,25 @@ int main(int argc,char *argv[])
     Quote_t* quote=creatQuote();
     //read file
     readRegals(&quote,file);   
+    //commodity(quote,file);
+
+    Quote_t* list=creatQuote();
+    addSort(list,4);
+    addSort(list,2);
+    addSort(list,7);
+    addSort(list,6);
+    addSort(list,5);
+    addSort(list,8);
+    while (list->first!=NULL)
+    {
+        Node_t* temp=list->first->next;
+        printf("%d\n",list->first->regals);
+        list->first=temp;
+    }
     
-    commodity(quote,file);
+
+
+
 
     fclose(file);
 

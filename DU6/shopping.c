@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 /*Linked list for products*/
 typedef struct Products
@@ -105,15 +106,52 @@ void clearQuote(Quote_t * quote)
 }
 /************************************************************************************/
 
+char *lowerString(char *buffer)
+{
+    for(long int i=0; i<(long int)strlen(buffer); i++)
+    {
+        buffer[i]=tolower(buffer[i]);
+    }
+    return buffer;
+}
+
+
+/**searching but not ideal worst idea*/
+int searchLinkedList(Products_t* products,const char *name,char *string)
+{
+    Products_t *temp=products;
+    while (temp!=NULL)
+    {
+        if(strstr(temp->protuct,name)!=NULL)
+        {
+            strcpy(string,temp->protuct);
+            return 1;
+        }
+        temp=temp->next;
+    }
+    return 0;
+}
+
+int searchQuote(Quote_t quote, const char *name,char *string)
+{
+    int count=0;
+    while (quote.first!=NULL)
+    {
+        if(searchLinkedList(quote.first->products,name,string))
+        {
+            return count;
+        }
+        quote.first=quote.first->next;
+        count++;
+    }
+    return -1;
+}
 
 
 
 
 
-
-
-
-
+/**Get products in regal*/
 int readRegals(Quote_t** quote, FILE *file){
     char buffer[201];
     int productsCount=0;
@@ -129,28 +167,57 @@ int readRegals(Quote_t** quote, FILE *file){
             regal++;
             continue;
         }
-        newProduct(&(*quote)->last->products,buffer);
+        newProduct(&(*quote)->last->products,lowerString(buffer));
         productsCount++;
     }    
     return 0;
 }
 
+/**ragals compare with list*/
+void commodity(Quote_t* quote,FILE *file)
+{
+    char buffer[201];
+    while(fgets(buffer,200,file))
+    {
+        if(buffer[0]=='\n')
+        {
+            //commodity(quote,file);
+            return;
+        } 
+        char string[200];
+        //pozistion in regal and product in regal;
+        int s=searchQuote(*quote,lowerString(buffer),string);
+        if(s==-1)
+            continue;
+        printf("%d %s",s,string);         
+    }
+    return;
+}
 
-/** @return 100 from main, cant open file */
+/** @return 100 cannot open the file
+ *  @return 101 cannot read name of file
+ */
 int main(int argc,char *argv[])
 {
     char * filename=argv[1];
+    if(filename==NULL)
+     {
+        fprintf(stderr,"Nezadan nazev souboru!");
+        return 101;
+    }
     FILE *file = fopen(filename, "r");
     if(!file)
     {
         fprintf(stderr,"Neotevrel se soubor");
         return 100;
     }
-
+    
     Quote_t* quote=creatQuote();
     //read file
     readRegals(&quote,file);   
     
+    commodity(quote,file);
+
     fclose(file);
 
     //free all memory

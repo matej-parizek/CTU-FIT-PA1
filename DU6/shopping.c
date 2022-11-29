@@ -194,11 +194,6 @@ void printfLinkedList(Products_t* products, int regal,int* position)
 }
 void printfQuote(Quote_t * quote, Products_t* noList)
 {
-    if(quote->first==NULL)
-    {
-        free(quote);
-        return;
-    }
     int position =0;
     while (quote->first!=NULL)
     {
@@ -213,47 +208,77 @@ void printfQuote(Quote_t * quote, Products_t* noList)
 
 
 /**************searching but not ideal worst idea*********************/
-char *searchLinkedList(Products_t products,const char *name)
+int searchLinkedList(Products_t products,const char *name,char *buffer)
 {
     Products_t *temp=&products;
+    int maxLen=0;
     while (temp!=NULL)
-    {   
-        if(strstr(temp->lowerProduct,name)!=NULL)
+    {   char *string=strstr(temp->lowerProduct,name);
+        if(string!=NULL)
         {
-            return temp->protuct;
+            int len=strspn(name,temp->lowerProduct);
+            //printf("%d %s #%s\n",len,temp->lowerProduct,name);
+            if(len>maxLen)
+            {
+                strcpy(buffer,temp->protuct);
+                maxLen=len;
+            }
         }
         temp=temp->next;
     }
-    return NULL;
+    return maxLen;
 }
 int searchQuote(Quote_t* list, Quote_t quote, char *name)
 {
-    char temp[201];temp[0]='\0';
-    int regal=0;  int minRegal=__INT32_MAX__;
-    char help[201]; strcpy(help,name);
-    int lenName=(int)strlen(name);
+    char temp[201];
+    int regal=0;
+    char help[201]; strcpy(help,name);  //change letters to lower
+    int lenName=(int)strlen(name); // len of name of product
+    int maxLen=0;
     lowerString(help);
     while (quote.first!=NULL)
     {
-        int lenMax=0;
-        char *buffer=searchLinkedList(*quote.first->products, help);
-        if(buffer!=NULL)
+        char buffer[201];
+        buffer[0]='\0';
+        if(quote.first->products==NULL)
         {
-            int len=(int)strlen(buffer);
-            if(lenMax<len)
-            {                
+            quote.first=quote.first->next;
+            continue;
+        }
+        int len=searchLinkedList(*quote.first->products, help,buffer);
+        if(len!=0)
+        {   
+            if(len>maxLen)
+            {
+                //printf("[<]%d %s #%s\n",len,buffer,name);
+                maxLen=len;
                 strcpy(temp,buffer);
                 regal=quote.first->regals;
-                lenMax=len;
-                if(lenName==lenMax)
+                quote.first=quote.first->next;
+                continue;
+            }
+            if (len==maxLen)
+            {
+                int lenBuffer=(int)strlen(buffer);
+                if(lenName==lenBuffer)
                 {
+                   //printf("[==]%d %s #%s\n",len,buffer,name);
+                    strcpy(temp,buffer);
+                    regal=quote.first->regals;
                     break;
                 }
+                if(regal>quote.first->regals)
+                {
+                    strcpy(temp,buffer);
+                    regal=quote.first->regals;
+                }
+                    //printf("[==]%d %s #%s\n",len,buffer,name);
             }
+            
         }
         quote.first=quote.first->next;
     }
-    if(temp[0]!='\0')
+    if(maxLen!=0)
     {
         addSort(list,regal,name,temp);
         return 1;
@@ -266,23 +291,24 @@ int searchQuote(Quote_t* list, Quote_t quote, char *name)
 
 /**********REGALS*********************************/
 /**Get products in regal*/
-int readRegals(Quote_t** quote, FILE *file){
+int readRegals(Quote_t** quote){
     char buffer[201];
     int past=-1;
     char enter[2]; enter[0]='\n';enter[1]='\0';
 
-    while (fgets(buffer,200,file))
+    while (fgets(buffer,200,stdin))
     {
         if(buffer[0]=='\n')
             break;
         //osetrit;
         if(buffer[0]=='#')
         {
-            strcpy(buffer,buffer+1);
+            char buff[20];
+            strcpy(buff,buffer+1);
             past+=1;
-            if(past != atoi(buffer))    //wrong input
+            if(past != atoi(buff))    //wrong input
                 return 1;
-            add(*quote,atoi(buffer));
+            add(*quote,atoi(buff));
             continue;
         }
         int p = strcspn(buffer,enter);
@@ -294,14 +320,15 @@ int readRegals(Quote_t** quote, FILE *file){
 }
 
 /**ragals compare with list*/
-void commodity(Quote_t* quote,FILE *file)
+int commodity(Quote_t* quote, int null)
 {
     char buffer[201];
     Quote_t* list=creatQuote();
     Products_t *notList=NULL;
     printf("Optimalizovany seznam:\n");
-    while(fgets(buffer,200,file))
+    while(fgets(buffer,200,stdin))
     {
+        null=1;
         char enter[2]; enter[0]='\n';enter[1]='\0';
         int p = strcspn(buffer,enter);
         if(p!=0)
@@ -310,8 +337,8 @@ void commodity(Quote_t* quote,FILE *file)
         if(buffer[0]=='\n')
         {
             printfQuote(list,notList);
-            commodity(quote,file);
-            return;
+            commodity(quote, null);
+            return 0;
         } 
 
         //pozistion in regal and product in regal;
@@ -319,11 +346,15 @@ void commodity(Quote_t* quote,FILE *file)
         if(s==-1)
         {
             newProduct(&notList,buffer,"N/A");
-            continue;
         }
     }
+    if(null == 0)
+    {
+        clearQuote(list);
+        return 1;
+    }
     printfQuote(list,notList);
-    return;
+    return 0;
 }
 
 
@@ -332,28 +363,22 @@ void commodity(Quote_t* quote,FILE *file)
  *  @return 101 cannot read name of file
  */
 int main(int argc,char *argv[])
-{
-    char * filename1=argv[1];
-
-    if(filename1==NULL)
-     {
-        fprintf(stderr,"Nezadan nazev souboru!");
-        return 101;
-    }
-
-    FILE *file1 = fopen(filename1, "r");
-
-    if(!file1)
-    {
-        fprintf(stderr,"Neotevrel se soubor");
-        return 100;
-    }
-    
+{  
     Quote_t* quote=creatQuote();
     //read file
-    readRegals(&quote,file1);
-    commodity(quote,file1);
-    fclose(file1);
+    if(readRegals(&quote))
+    {
+        printf("Nespravny vstup.\n");
+        clearQuote(quote);
+        return 0;
+    }
+
+    if(commodity(quote,0))
+    {
+        printf("Nespravny vstup.\n");
+        clearQuote(quote);
+        return 0;
+    }
 
     //free all memory
     clearQuote(quote);

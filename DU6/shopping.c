@@ -298,6 +298,8 @@ int readRegals(Quote_t** quote){
 
     while (fgets(buffer,200,stdin))
     {
+        if(past==-1 && buffer[0]!='#')
+            return 1;
         if(buffer[0]=='\n')
             break;
         //osetrit;
@@ -325,7 +327,6 @@ int commodity(Quote_t* quote, int null)
     char buffer[201];
     Quote_t* list=creatQuote();
     Products_t *notList=NULL;
-    printf("Optimalizovany seznam:\n");
     while(fgets(buffer,200,stdin))
     {
         null=1;
@@ -336,6 +337,7 @@ int commodity(Quote_t* quote, int null)
 
         if(buffer[0]=='\n')
         {
+            printf("Optimalizovany seznam:\n");
             printfQuote(list,notList);
             commodity(quote, null);
             return 0;
@@ -353,6 +355,7 @@ int commodity(Quote_t* quote, int null)
         clearQuote(list);
         return 1;
     }
+    printf("Optimalizovany seznam:\n");
     printfQuote(list,notList);
     return 0;
 }
@@ -379,7 +382,6 @@ int main(int argc,char *argv[])
         clearQuote(quote);
         return 0;
     }
-
     //free all memory
     clearQuote(quote);
     return 0;

@@ -8,34 +8,8 @@
 #endif /* __PROGTEST__ */
 
 //is substring in string
-int isIn(const char *text, const char **replace,int *start)
+int isIn(const char *text, const char **replace,int *start,const char *(*rep)[2])
 {
-  int i=0;
-  int count=0;
-  while (text[i]!='\0')
-  {
-    if(text[i]==replace[0][0])
-    {
-      *start=i;
-      int j=1;
-      while (replace[0][j]!='\0')
-      {
-        if(replace[0][j]==text[i+j])
-          count++;
-        else
-        {
-          i+=j;
-          count=0;
-          break;
-        }
-        j++;
-      }
-      if(count==(int)strlen(replace[0])-1)
-        return 1;
-    }
-    i++;
-  }
-  return 0;
 }
 
 int control(const char *(*replace)[2])
@@ -58,50 +32,13 @@ int control(const char *(*replace)[2])
 //change incorect word
 char *change(const char * text, const char **word,int start,char *rep)
 {
-  int lenWord1=strlen(word[1]);
-  int lenWord0=strlen(word[0]);
-  free(rep);
-  char *repText=(char*)calloc(1+strlen(text)-lenWord0+lenWord1,sizeof(char));
-  int i=0;
-  while (text[i]!='\0')
-  {
-    if(i==start)
-    {
-      strcat(repText,word[1]);
-      break;
-    }
-    repText[i]=text[i];
-    i++;
-  }
-  strcat(repText,text+i+lenWord0);
-  return repText;
+
 }
 //find incorect words
 char *find(const char *text,const char * (*replace)[2])
 {
-  int i=0; 
-  int start=0;
-  int len=strlen(text);
-  char *repText=(char*)calloc(strlen(text)+1,sizeof(char));
-  strcpy(repText,text);
-  char *buffer=(char*)calloc(strlen(text)+1,sizeof(char));
-  strcpy(buffer,text);
-  while (replace[i][0]!=NULL)
-  {
-    if(isIn(text,replace[i],&start))
-    {
-      repText=(char *)realloc(repText,(1+(int)strlen(replace[i][0])+
-      (int)strlen(replace[i][1])+len)*sizeof(char));
-      buffer=(char *)realloc(buffer,(1+(int)strlen(replace[i][0])+
-      (int)strlen(replace[i][1])+len)*sizeof(char));
-      repText=change(buffer,replace[i],start,repText);
-      strcpy(buffer,repText);
-      len=strlen(repText);
-    }
-    i++;
-  }
-  free(buffer);
-  return repText;
+ 
+
 }
 
 char * newSpeak ( const char * text, const char * (*replace)[2] )
@@ -139,7 +76,23 @@ int main ( int argc, char * argv [] )
     { NULL, NULL }
   };
 
+  const char * tbl [][2] =
+{ 
+  { "murderer", "termination specialist" },
+  { "failure", "non-traditional success" },
+  { "specialist", "person with certified level of knowledge" },
+  { "dumb", "cerebrally challenged" },
+  { "teacher", "voluntary knowledge conveyor" },
+  { "evil", "nicenest deprived" },
+  { "incorrect answer", "alternative answer" },
+  { "student", "client" },
+  { NULL, NULL }
+};
+
   
+  
+  newSpeak ( "teacherevilstudentdumbfailuremurderer", tbl );
+  /*
   res = newSpeak ( "Everybody is happy.", d1 );
   assert ( ! strcmp ( res, "Everybody is happy." ) );
   free ( res );
@@ -162,7 +115,7 @@ int main ( int argc, char * argv [] )
 
   res = newSpeak ( "Hello.", d2 );
   assert ( ! res );
-
+*/
   return EXIT_SUCCESS;
 }
 #endif /* __PROGTEST__ */

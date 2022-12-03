@@ -1,6 +1,111 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/*TREE*/
+typedef struct Tree
+{
+    int score1, score2, level;
+    char name;
+    struct Tree* parent;
+    struct Tree* first;
+    struct Tree* second;
+    struct Tree* third;
+    struct Tree* fourth;   
+}Tree_t;
+
+Tree_t* newTree(int score1,int score2, Tree_t* parent, int level, char name)
+{
+    Tree_t* newNode=(Tree_t*)malloc(sizeof(Tree_t));
+    newNode->score1=score1;
+    newNode->score2=score2;
+    newNode->level=level;
+    newNode->name=name;
+    newNode->first=NULL;
+    newNode->second=NULL;
+    newNode->third=NULL;
+    newNode->fourth=NULL;
+    newNode->parent=parent;
+    return newNode;
+}
+
+void clearTree(Tree_t* tree)
+{
+    if(tree!=NULL)
+    {
+        clearTree(tree->first);
+        clearTree(tree->second);
+        clearTree(tree->third);
+        clearTree(tree->fourth);
+        free(tree);
+    }
+    return;
+}
+void printTree(Tree_t* tree, int max)
+{
+    if(tree!=NULL)
+    {
+        printTree(tree->first, max);
+        printTree(tree->second, max);
+        printTree(tree->third, max);
+        printTree(tree->fourth, max);
+            printf("data:%d/%d  level:%d node:%c\n",tree->score1, tree->score2,tree->level,tree->name);
+    }
+}
+
+void maxLevel(Tree_t* tree, int *max)
+{
+    if(tree!=NULL)
+    {
+        maxLevel(tree->first, max);
+        maxLevel(tree->second, max);
+        maxLevel(tree->third, max);
+        maxLevel(tree->fourth, max);
+        if(tree->level>*max)
+            *max=tree->level;
+    }
+    return;
+}
+
+void search(Tree_t* tree, int player, Tree_t** tmp, int level)
+{
+    if(tree!=NULL)
+    {
+        search(tree->first, player, tmp, level);
+        search(tree->second, player, tmp, level);
+        search(tree->third, player, tmp, level);
+        search(tree->fourth, player,tmp, level);
+
+        if(tree->level==level)
+        {
+            if(player==1)
+            {
+                if(tree->score1 > (*tmp)->score1)
+                {
+                    *tmp=tree;
+                }
+            }
+            if(player==2)
+            {
+                if(tree->score2 > (*tmp)->score2)
+                {
+                    *tmp=tree;
+                }
+            }
+        }
+    }
+    return;
+}
+
+char research(Tree_t* tree)
+{
+    char c='\0';
+    while (tree->parent!=NULL)
+    {
+        c=tree->name;
+        tree=tree->parent;
+    }
+    return c ;
+}
 /*LINKED LIST*/
 typedef struct Node
 {
@@ -83,11 +188,14 @@ int input(Node_t** north,Node_t** south,Node_t** west,Node_t** east, char *used)
     int r=scanf(" %c: %c", &s1, &s2);
     if (control(used,s1))
         return 0;
-    if(s1!= 'N' && s1!= 'W' && s1!= 'E' && s1!= 'S' && s2!='{')
+    if(s1!= 'N' && s1!= 'W' && s1!= 'E' && s1!= 'S' && s2!='{' && r!=2)
         return 0;
     int number;
-    while ((r=scanf(" %d",&number)))
-    {
+    int counter=0;
+    while ((r=scanf(" %d",&number))!=EOF)
+    {   
+        if(counter>31 || r==0)
+            return 0;
         if(s1=='N')
             append(north,number);
         if(s1=='S')
@@ -109,6 +217,7 @@ int input(Node_t** north,Node_t** south,Node_t** west,Node_t** east, char *used)
         }
         if(c=='}')
             break;
+        counter++;
     }
     return 1;
 }
@@ -120,11 +229,12 @@ void print(Node_t *token)
         printf("%d ",token->data);
         token=token->next;
     }
+    printf("\n");
 }
 
 
 /*HIGHEST NUMBER IN TOKENS*/
-char highestToken(Node_t* north, Node_t* south, Node_t* west, Node_t* east)
+char max(Node_t* north, Node_t* south, Node_t* west, Node_t* east)
 {
     int max=0;
     char c='\0';
@@ -166,15 +276,97 @@ char highestToken(Node_t* north, Node_t* south, Node_t* west, Node_t* east)
             max=(*east).data;
             c='E';
         }
+    
     return c;
 }
+
+void forest(Tree_t* tree,Node_t** north, Node_t** south, Node_t** west, Node_t** east, int level, int player)               
+{
+    int number;
+
+    if(north !=NULL && south!=NULL && west!=NULL && south!=NULL)
+    {
+        if(player==1)
+        {
+            if(pop(north,&number))
+            {
+                tree->first=newTree(tree->score1+number,tree->score2,tree,level,'N');
+                forest(tree->first,north,south,west,east,level+1,2);
+                push(north,number);
+            }
+            if(pop(south,&number))
+            {
+                tree->second=newTree(tree->score1+number,tree->score2,tree,level,'S');
+                forest(tree->second,north,south,west,east,level+1,2);
+                push(south,number);
+            }
+            if(pop(west,&number))
+            {
+                tree->third=newTree(tree->score1+number,tree->score2,tree,level,'W');
+                forest(tree->third,north,south,west,east,level+1,2);
+                push(west,number);
+            }
+            if(pop(east,&number))
+            {
+                tree->fourth=newTree(tree->score1+number,tree->score2,tree,level,'E');
+                forest(tree->fourth,north,south,west,east,level+1,2);
+                push(east,number);
+            }
+        }
+        if(player==2)
+        {
+            if(pop(north,&number))
+            {
+                tree->first=newTree(tree->score1,tree->score2+number,tree,level,'N');
+                forest(tree->first,north,south,west,east,level+1,1);
+                push(north,number);
+            }
+            if(pop(south,&number))
+            {
+                tree->second=newTree(tree->score1,tree->score2+number,tree,level,'S');
+                forest(tree->second,north,south,west,east,level+1,1);
+                push(south,number);
+            }
+            if(pop(west,&number))
+            {
+                tree->third=newTree(tree->score1,tree->score2+number,tree,level,'W');
+                forest(tree->third,north,south,west,east,level+1,1);
+                push(west,number);
+            }
+            if(pop(east,&number))
+            {
+                tree->fourth=newTree(tree->score1,tree->score2+number,tree,level,'E');
+                forest(tree->fourth,north,south,west,east,level+1,1);
+                push(east,number);
+            }
+        }
+        
+    }   
+}
+
+
+char best(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int score1, int score2, int player)
+{
+
+    Tree_t* tree=newTree(score1,score2,NULL,-1,'\0');
+    forest(tree,north,south,west,east,0,player);
+    int maxLvl=0;
+    maxLevel(tree,&maxLvl);
+    Tree_t* tmp=tree;
+    search(tree, player ,&tmp, maxLvl);
+    //printTree(tree,0);
+    char c= research(tmp);
+    clearTree(tree);
+    return c;
+}
+
 /*PLAY*/
 
-int score(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int *number,
-    int *countNorth, int *coutWest, int *countEast, int *coutSouth, char *c, int *pozition)
+int score(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int *number,int *countNorth, int *coutWest,
+int *countEast, int *coutSouth, char *c, int *pozition, int player, int score1, int score2) 
 {
     *number=0;
-    *c= highestToken(*north, *south, *west, *east); //funkce která vybírá co vyhodit
+    *c= best(north,south,west,east,score1,score2, player);  //funkce která vybírá co vyhodit
     if(*c=='N')
     {
         *countNorth+=1;
@@ -212,7 +404,8 @@ int *countNorth, int *coutWest, int *countEast, int *coutSouth)
     int pozition=0;
     if(player==1)
     {
-        int r = score(north,south,west,east,&number, countNorth, coutWest, countEast, coutSouth, &c,&pozition);
+        int r = score(north,south,west,east,&number, countNorth, coutWest, countEast, coutSouth,
+                        &c,&pozition, player, *score1, *score2);
         if(r!=0)
         {
             *score1+=number;
@@ -223,7 +416,8 @@ int *countNorth, int *coutWest, int *countEast, int *coutSouth)
     if(player==2)
     {
 
-        int r = score(north,south,west,east,&number,countNorth, coutWest, countEast, coutSouth, &c,&pozition);
+        int r = score(north,south,west,east,&number,countNorth, coutWest, countEast, coutSouth, 
+                        &c,&pozition, player, *score1, *score2);
         if(r!=0)
         {
             *score2+=number;
@@ -241,9 +435,11 @@ int main()
     Node_t* west=NULL;
     Node_t* east=NULL;
     char read[5]; read[0]='\0';
+    printf("Zetony:\n");
     if(input(&north,&south, &west, &east,read) == 0)
     {
         printf("Nespravny vstup.\n");
+        printf("%s\n",read);
         clearAll( north, south, west, east);
         return 0;
     }
@@ -259,7 +455,7 @@ int main()
         clearAll( north, south, west, east);
         return 0;
     }
-    if(input(&north,&south, &west, &east,read) == 0)
+    if(input(&north,&south, &west, &east,read) == 0 || north==NULL || south==NULL || east==NULL || west==NULL)
     {
         printf("Nespravny vstup.\n");
         clearAll( north, south, west, east);
@@ -269,11 +465,11 @@ int main()
     int score1=0, score2=0;
 
     /*Game*/
-
     play(&north,&south,&west,&east,&score1,&score2,1,&countNorth, &coutWest, &countEast, &coutSouth);
+    //best(&north,& south, &west, &east,0,0,1);
 
+    //zkouska stromu
     printf("Celkem A/B: %d/%d\n",score1,score2);
-
     clearAll( north, south, west, east);
     return 0;
 }

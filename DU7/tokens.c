@@ -48,7 +48,8 @@ void printTree(Tree_t* tree, int max)
         printTree(tree->second, max);
         printTree(tree->third, max);
         printTree(tree->fourth, max);
-            printf("data:%d/%d  level:%d node:%c\n",tree->score1, tree->score2,tree->level,tree->name);
+        if(max==tree->level)
+            printf("data:%d/%d %c\n",tree->score1, tree->score2, tree->name);
     }
 }
 
@@ -75,11 +76,9 @@ void search(Tree_t* tree, int player, Tree_t** tmp, int level)
         search(tree->third, player, tmp, level);
         search(tree->fourth, player,tmp, level);
 
-        if(tree->level==level)
-        {
             if(player==1)
             {
-                if(tree->score1 > (*tmp)->score1)
+                if(tree->score1 > (*tmp)->score1 )
                 {
                     *tmp=tree;
                 }
@@ -91,7 +90,6 @@ void search(Tree_t* tree, int player, Tree_t** tmp, int level)
                     *tmp=tree;
                 }
             }
-        }
     }
     return;
 }
@@ -296,8 +294,8 @@ void forest(Tree_t* tree,Node_t** north, Node_t** south, Node_t** west, Node_t**
             }
             if(pop(south,&number))
             {
-                tree->second=newTree(tree->score1+number,tree->score2,tree,level,'S');
-                forest(tree->second,north,south,west,east,level+1,2);
+                tree->fourth=newTree(tree->score1+number,tree->score2,tree,level,'S');
+                forest(tree->fourth,north,south,west,east,level+1,2);
                 push(south,number);
             }
             if(pop(west,&number))
@@ -308,8 +306,8 @@ void forest(Tree_t* tree,Node_t** north, Node_t** south, Node_t** west, Node_t**
             }
             if(pop(east,&number))
             {
-                tree->fourth=newTree(tree->score1+number,tree->score2,tree,level,'E');
-                forest(tree->fourth,north,south,west,east,level+1,2);
+                tree->second=newTree(tree->score1+number,tree->score2,tree,level,'E');
+                forest(tree->second,north,south,west,east,level+1,2);
                 push(east,number);
             }
         }
@@ -323,8 +321,8 @@ void forest(Tree_t* tree,Node_t** north, Node_t** south, Node_t** west, Node_t**
             }
             if(pop(south,&number))
             {
-                tree->second=newTree(tree->score1,tree->score2+number,tree,level,'S');
-                forest(tree->second,north,south,west,east,level+1,1);
+                tree->fourth=newTree(tree->score1,tree->score2+number,tree,level,'S');
+                forest(tree->fourth,north,south,west,east,level+1,1);
                 push(south,number);
             }
             if(pop(west,&number))
@@ -335,8 +333,8 @@ void forest(Tree_t* tree,Node_t** north, Node_t** south, Node_t** west, Node_t**
             }
             if(pop(east,&number))
             {
-                tree->fourth=newTree(tree->score1,tree->score2+number,tree,level,'E');
-                forest(tree->fourth,north,south,west,east,level+1,1);
+                tree->second=newTree(tree->score1,tree->score2+number,tree,level,'E');
+                forest(tree->second,north,south,west,east,level+1,1);
                 push(east,number);
             }
         }
@@ -354,7 +352,8 @@ char best(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int scor
     maxLevel(tree,&maxLvl);
     Tree_t* tmp=tree;
     search(tree, player ,&tmp, maxLvl);
-    //printTree(tree,0);
+    printf("%d /%d\n", tmp->score1, tmp->score2);
+    //printTree(tree, maxLvl);
     char c= research(tmp);
     clearTree(tree);
     return c;
@@ -410,6 +409,7 @@ int *countNorth, int *coutWest, int *countEast, int *coutSouth)
         {
             *score1+=number;
             printf("A: %c[%d] (%d)\n", c, pozition,number);
+           // printf("------score1 %d/ score2 %d\n"  ,*score1,*score2);
             play(north,south,west,east,score1,score2,2, countNorth, coutWest, countEast, coutSouth);
         }
     }
@@ -422,6 +422,7 @@ int *countNorth, int *coutWest, int *countEast, int *coutSouth)
         {
             *score2+=number;
             printf("B: %c[%d] (%d)\n", c, pozition,number);
+            //printf("------score1 %d/ score2 %d\n"  ,*score1,*score2);
             play(north,south,west,east,score1,score2,1,countNorth, coutWest, countEast, coutSouth);
         }
     }

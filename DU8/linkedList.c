@@ -40,9 +40,146 @@ TITEM *newItem(const char *name, TITEM *next)
 
 }
 
+TITEM *parition(TITEM* first, TITEM* last, int asc, int (*cmpFn)(const TITEM *, const TITEM *))
+{
+  TITEM *pivot=first;
+  TITEM *front=first;
+  char temp[200];
+  while (front!=NULL && front!=last)
+  {
+    if(cmpFn(front,last)<=0 && asc==1)
+    {
+      pivot=first;
+      strcpy(temp,first->m_Name);
+      strcpy(first->m_Name,front->m_Name);
+      strcpy(front->m_Name,temp);
+      first=first->m_Next;
+
+    }
+    if(cmpFn(front,last)>0 && asc==0)
+    {
+      pivot=first;
+      strcpy(temp,first->m_Name);
+      strcpy(first->m_Name,front->m_Name);
+      strcpy(front->m_Name,temp);
+      first=first->m_Next;
+
+    }
+    front=front->m_Next;
+  }
+  strcpy(temp,first->m_Name);
+  strcpy(first->m_Name, last->m_Name);
+  strcpy(last->m_Name,temp);
+  return pivot;
+}
+
+void quickSort(TITEM* first, TITEM* last,int asc, int (*cmpFn)(const TITEM *, const TITEM *))
+{
+  if(first==last)
+    return;
+  TITEM* pivot=parition(first,last, asc, cmpFn);
+  if(pivot!=NULL && pivot->m_Next!=NULL)
+    quickSort(pivot->m_Next,last,asc,cmpFn);
+  if(pivot!=NULL && first!=pivot)
+    quickSort(first,pivot,asc, cmpFn);
+}
+
+
+/*MERGESORT*/
+TITEM* sortedMergeA(TITEM* a, TITEM* b,int (*cmpFn)(const TITEM *, const TITEM *));
+TITEM* sortedMergeB(TITEM* a, TITEM* b,int (*cmpFn)(const TITEM *, const TITEM *));
+void frontBackSplit(TITEM* source, TITEM ** front, TITEM** back);
+
+void mergeSort(TITEM** headRef,int asc, int (*cmpFn)(const TITEM *, const TITEM *))
+{
+  TITEM* head= *headRef;
+  TITEM* a;
+  TITEM *b;
+
+  if(head==NULL || head->m_Next==NULL)
+    return;
+  frontBackSplit(head,&a,&b);
+  mergeSort(&a,asc,cmpFn);
+  mergeSort(&b,asc, cmpFn);
+  if(asc==0)
+    *headRef=sortedMergeA(a,b,cmpFn);
+  if(asc==1)
+    *headRef=sortedMergeB(a,b,cmpFn);
+}
+
+TITEM* sortedMergeA(TITEM* a, TITEM* b, int (*cmpFn)(const TITEM *, const TITEM *))
+{
+  TITEM *result=NULL;
+  if(a==NULL)
+    return b;
+  if(b==NULL)
+    return a;
+  int cmp=cmpFn(a,b);
+  if(cmp>=0)
+  {
+    result=a;
+    result->m_Next=sortedMergeA(a->m_Next,b,cmpFn);
+  }
+  else
+  {
+    result = b;
+    result->m_Next=sortedMergeA(a,b->m_Next,cmpFn);
+  }
+  return result;
+}
+
+TITEM* sortedMergeB(TITEM* a, TITEM* b, int (*cmpFn)(const TITEM *, const TITEM *))
+{
+  TITEM *result=NULL;
+  if(a==NULL)
+    return b;
+  if(b==NULL)
+    return a;
+  int cmp=cmpFn(a,b);
+  if(cmp<=0)
+  {
+    result=a;
+    result->m_Next=sortedMergeB(a->m_Next,b,cmpFn);
+  }
+  else
+  {
+    result = b;
+    result->m_Next=sortedMergeB(a,b->m_Next,cmpFn);
+  }
+  return result;
+}
+
+void frontBackSplit(TITEM* source, TITEM** front, TITEM** back)
+{
+  TITEM *fast=source->m_Next;
+  TITEM* slow= source;
+  while (fast!=NULL)
+  {
+    fast=fast->m_Next;
+    if(fast!=NULL)
+    {
+      slow=slow->m_Next;
+      fast=fast->m_Next;
+    }
+  }
+  *front=source;
+  *back=slow->m_Next;
+  slow->m_Next=NULL;
+}
+
+/***************************************************************/
+
+
+
+
 TITEM *sortListCmp(TITEM *l, int ascending, int (*cmpFn)(const TITEM *, const TITEM *))
 {
-  
+
+  //mergeSort(&l,ascending,cmpFn);
+  TITEM *last=l;
+  while (last->m_Next)
+    last=last->m_Next;
+  quickSort(l,last,ascending,cmpFn);
   
   return l;
 }
@@ -78,13 +215,13 @@ int main(int argc, char *argv[])
   assert(l->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Name, "BIE-PA2"));
   assert(l->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Name, "BI-PA1"));
   assert(l->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);
-  /*l = sortListCmp(l, 1, cmpName);
+  l = sortListCmp(l, 1, cmpName); 
   assert(l && !strcmp(l->m_Name, "AG1"));
   assert(l->m_Next && !strcmp(l->m_Next->m_Name, "BI-PA1"));
   assert(l->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Name, "BIE-PA2"));
   assert(l->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Name, "NI-PAR"));
   assert(l->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Name, "lin"));
-  assert(l->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);*/
+  assert(l->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);
   l = sortListCmp(l, 1, cmpNameInsensitive);
   assert(l && !strcmp(l->m_Name, "AG1"));
   assert(l->m_Next && !strcmp(l->m_Next->m_Name, "BI-PA1"));
@@ -92,7 +229,7 @@ int main(int argc, char *argv[])
   assert(l->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Name, "lin"));
   assert(l->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Name, "NI-PAR"));
   assert(l->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);
-  /*l = sortListCmp(l, 1, cmpNameLen);
+  l = sortListCmp(l, 1, cmpNameLen);
   assert(l && !strcmp(l->m_Name, "AG1"));
   assert(l->m_Next && !strcmp(l->m_Next->m_Name, "lin"));
   assert(l->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Name, "BI-PA1"));
@@ -107,7 +244,13 @@ int main(int argc, char *argv[])
   assert(l->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Name, "NI-PAR"));
   assert(l->m_Next->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Next->m_Name, "BIE-PA2"));
   assert(l->m_Next->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);
-  l = sortListCmp(l, 0, cmpNameLen);
+  l = sortListCmp(l, 0, cmpNameLen); 
+  TITEM* f=l;
+  while (f)
+  {
+    printf("%s\n",f->m_Name);
+    f=f->m_Next;
+  }
   assert(l && !strcmp(l->m_Name, "BIE-PA2"));
   assert(l->m_Next && !strcmp(l->m_Next->m_Name, "BI-PA1"));
   assert(l->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Name, "NI-PAR"));
@@ -176,7 +319,7 @@ int main(int argc, char *argv[])
   assert(l->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Name, "AAG.3"));
   assert(l->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Name, "AG1"));
   assert(l->m_Next->m_Next->m_Next->m_Next->m_Next && !strcmp(l->m_Next->m_Next->m_Next->m_Next->m_Next->m_Name, "lin"));
-  assert(l->m_Next->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);*/
+  assert(l->m_Next->m_Next->m_Next->m_Next->m_Next->m_Next == NULL);
   freeList(l);
   return EXIT_SUCCESS;
 }

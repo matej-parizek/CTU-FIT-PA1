@@ -1,109 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/*TREE*/
-typedef struct Tree
-{
-    int score1, score2, level;
-    char name;
-    struct Tree* parent;
-    struct Tree* first;
-    struct Tree* second;
-    struct Tree* third;
-    struct Tree* fourth;   
-}Tree_t;
 
-Tree_t* newTree(int score1,int score2, Tree_t* parent, int level, char name)
-{
-    Tree_t* newNode=(Tree_t*)malloc(sizeof(Tree_t));
-    newNode->score1=score1;
-    newNode->score2=score2;
-    newNode->level=level;
-    newNode->name=name;
-    newNode->first=NULL;
-    newNode->second=NULL;
-    newNode->third=NULL;
-    newNode->fourth=NULL;
-    newNode->parent=parent;
-    return newNode;
-}
 
-void clearTree(Tree_t* tree)
-{
-    if(tree!=NULL)
-    {
-        clearTree(tree->first);
-        clearTree(tree->second);
-        clearTree(tree->third);
-        clearTree(tree->fourth);
-        free(tree);
-    }
-    return;
-}
-void printTree(Tree_t* tree, int max)
-{
-    if(tree!=NULL)
-    {
-        printTree(tree->first, max);
-        printTree(tree->second, max);
-        printTree(tree->third, max);
-        printTree(tree->fourth, max);
-        if(max==tree->level)
-            printf("data:%d/%d %c\n",tree->score1, tree->score2, tree->name);
-    }
-}
-
-void maxLevel(Tree_t* tree, int *max)
-{
-    if(tree!=NULL)
-    {
-        maxLevel(tree->first, max);
-        maxLevel(tree->second, max);
-        maxLevel(tree->third, max);
-        maxLevel(tree->fourth, max);
-        if(tree->level>*max)
-            *max=tree->level;
-    }
-    return;
-}
-
-void search(Tree_t* tree, int player, Tree_t** tmp, int level)
-{
-    if(tree!=NULL)
-    {
-        search(tree->first, player, tmp, level);
-        search(tree->second, player, tmp, level);
-        search(tree->third, player, tmp, level);
-        search(tree->fourth, player,tmp, level);
-
-            if(player==1)
-            {
-                if(tree->score1 > (*tmp)->score1 )
-                {
-                    *tmp=tree;
-                }
-            }
-            if(player==2)
-            {
-                if(tree->score2 > (*tmp)->score2)
-                {
-                    *tmp=tree;
-                }
-            }
-    }
-    return;
-}
-
-char research(Tree_t* tree)
-{
-    char c='\0';
-    while (tree->parent!=NULL)
-    {
-        c=tree->name;
-        tree=tree->parent;
-    }
-    return c ;
-}
 /*LINKED LIST*/
 typedef struct Node
 {
@@ -165,10 +64,36 @@ void clearAll(Node_t* north, Node_t* south, Node_t* west, Node_t* east)
     clear(east);
     clear(west);
 }
+
+int numberElements(Node_t * node)
+{
+    Node_t* token=node;
+    int counter=0;
+    while (token!=NULL)
+    {
+        counter++;
+        token=token->next;
+    }
+    return counter;
+}
+int maxLevel(Node_t* north, Node_t* south, Node_t* east, Node_t* west)
+{
+    int level=0;
+    level+=numberElements(north);
+    level+=numberElements(east);
+    level+=numberElements(south);
+    level+=numberElements(west);
+    return level;
+}
+
+/*Function used in poping*/
+int recursion(Node_t** north,Node_t** south,Node_t** west,Node_t** east, int level, int score, int maxLevel, char* moves);
 /*PREPARE FOR GAME*/
 int control(char *read, char c)
 {
     int i=0;
+    if(c!='S' && c!='W' && c!='E' && c!='N')
+        return 1;
     while (read[i]!='\0')
     {
         if(read[i]==c)
@@ -179,7 +104,7 @@ int control(char *read, char c)
     read[i+1]='\0';
     return 0;
 }
-int input(Node_t** north,Node_t** south,Node_t** west,Node_t** east, char *used)    //Read inputs and check if all is right
+int input(Node_t** north,Node_t** south,Node_t** west,Node_t** east, char *used, int *total, int *maxLevel)    //Read inputs and check if all is right
 {
     char s1;
     char s2;
@@ -202,6 +127,7 @@ int input(Node_t** north,Node_t** south,Node_t** west,Node_t** east, char *used)
             append(west,number);
         if(s1=='E')
             append(east,number);
+        *total+=number;
         char c;
         c='\0';        
         while(scanf(" %c",&c)!=EOF)
@@ -217,9 +143,20 @@ int input(Node_t** north,Node_t** south,Node_t** west,Node_t** east, char *used)
             break;
         counter++;
     }
+    *maxLevel+=counter+1;
     return 1;
 }
+void readInput(Node_t** north,Node_t** south,Node_t** west,Node_t** east, int* total, int *maxLevel, char* read)
+{
+    if(input(north,south, west, east,read,total,maxLevel)==0)
+    {
+        printf("Nespravny vstup.\n");
+        clearAll( *north, *south, *west, *east);
+        exit(0);
+    }
+}
 
+/*PLAY*/
 void print(Node_t *token)
 {
     while (token!=NULL)
@@ -230,247 +167,155 @@ void print(Node_t *token)
     printf("\n");
 }
 
-
-/*HIGHEST NUMBER IN TOKENS*/
-char max(Node_t* north, Node_t* south, Node_t* west, Node_t* east)
+int min(int m1, int m2, int m3, int m4)
 {
-    int max=0;
-    char c='\0';
-    if(north!=NULL)
-    {
-        max=north->data;
-        c='N';
-    }
-    else if(south!=NULL)
-    {
-        max=south->data;
-        c='S';
-    }
-    else if(west!=NULL)
-    {
-        max=west->data;
-        c='W';
-    }
-    else if(east!=NULL)
-    {
-        max=east->data;
-        c='E';  
-    }
-    if(south!=NULL)
-        if(max < (*south).data)
-        {
-            max=(*south).data;
-            c='S';
-        }
-    if(west!=NULL)
-        if(max<(*west).data)
-        {
-            max=(*west).data;
-            c='W';
-        }
-    if(east!=NULL)
-        if(max < (*east).data)
-        {
-            max=(*east).data;
-            c='E';
-        }
-    
-    return c;
+    if(m1==-1*__INT_MAX__)
+        m1*=-1;
+    if(m2==-1*__INT_MAX__)
+        m2*=-1;
+    if(m3==-1*__INT_MAX__)
+        m3*=-1;
+    if(m4==-1*__INT_MAX__)
+        m4*=-1;
+    int minimal=m1;
+    if(minimal>m2)
+        minimal=m2;
+    if(minimal>m3)
+        minimal=m3;
+    if(minimal>m4)
+        minimal=m4;
+    return minimal;
 }
 
-void forest(Tree_t* tree,Node_t** north, Node_t** south, Node_t** west, Node_t** east, int level, int player)               
+int max(int m1, int m2, int m3, int m4)
 {
-    int number;
+    int maximal=m1;
+    if(maximal<m2)
+        maximal=m2;
+    if(maximal<m3)
+        maximal=m3;
+    if(maximal<m4)
+        maximal=m4;
+    return maximal;
+}
 
-    if(north !=NULL && south!=NULL && west!=NULL && south!=NULL)
+int poping(Node_t** token, Node_t** north,Node_t** south,Node_t** west,Node_t** east, int level, int score, int maxLevel, char* moves)
+{
+    int m=-1*__INT_MAX__;;
+    int number;
+    if(pop(token,&number))
     {
-        if(player==1)
-        {
-            if(pop(north,&number))
-            {
-                tree->first=newTree(tree->score1+number,tree->score2,tree,level,'N');
-                forest(tree->first,north,south,west,east,level+1,2);
-                push(north,number);
-            }
-            if(pop(south,&number))
-            {
-                tree->fourth=newTree(tree->score1+number,tree->score2,tree,level,'S');
-                forest(tree->fourth,north,south,west,east,level+1,2);
-                push(south,number);
-            }
-            if(pop(west,&number))
-            {
-                tree->third=newTree(tree->score1+number,tree->score2,tree,level,'W');
-                forest(tree->third,north,south,west,east,level+1,2);
-                push(west,number);
-            }
-            if(pop(east,&number))
-            {
-                tree->second=newTree(tree->score1+number,tree->score2,tree,level,'E');
-                forest(tree->second,north,south,west,east,level+1,2);
-                push(east,number);
-            }
-        }
-        if(player==2)
-        {
-            if(pop(north,&number))
-            {
-                tree->first=newTree(tree->score1,tree->score2+number,tree,level,'N');
-                forest(tree->first,north,south,west,east,level+1,1);
-                push(north,number);
-            }
-            if(pop(south,&number))
-            {
-                tree->fourth=newTree(tree->score1,tree->score2+number,tree,level,'S');
-                forest(tree->fourth,north,south,west,east,level+1,1);
-                push(south,number);
-            }
-            if(pop(west,&number))
-            {
-                tree->third=newTree(tree->score1,tree->score2+number,tree,level,'W');
-                forest(tree->third,north,south,west,east,level+1,1);
-                push(west,number);
-            }
-            if(pop(east,&number))
-            {
-                tree->second=newTree(tree->score1,tree->score2+number,tree,level,'E');
-                forest(tree->second,north,south,west,east,level+1,1);
-                push(east,number);
-            }
-        }
+        int prev=score;
+        if(level%2!=0)
+            score+=number;
+        m=recursion(north,south,west,east,level, score,maxLevel,moves);
+        score=prev;
+        push(token,number);
+    }
+    return m;
+}
+int recursion(Node_t** north,Node_t** south,Node_t** west,Node_t** east, int level, int score, int maxLevel, char* moves)
+{
+    int m1=-1*__INT_MAX__, m2=-1*__INT_MAX__, m3=-1*__INT_MAX__, m4=-1*__INT_MAX__;
+    if(north!=NULL && south !=NULL && east!=NULL && west!=NULL && level<13)
+    {
+        m1=poping(north,north,south,west,east,level+1,score,maxLevel,moves);
+        m2=poping(south,north,south,west,east,level+1,score,maxLevel,moves);
+        m3=poping(west,north,south,west,east,level+1,score,maxLevel,moves);
+        m4=poping(east,north,south,west,east,level+1,score,maxLevel,moves);
+    }
+    if(level==0)
+    {
+        if(m1==max(m1,m2,m3,m4))
+            *moves='N';
+        else if(m2==max(m1,m2,m3,m4))
+            *moves='S';
+        else if(m3==max(m1,m2,m3,m4))
+            *moves='W';
+        else if(m4==max(m1,m2,m3,m4))
+            *moves='E';
+    }
+   // printf("%d %d %d %d\n", m1,m2,m3,m4);
+    if(level==maxLevel || level==13)
+        return score;
+    if(level%2==0)
+    {
+       // printf("Max: %d lvl%d\n",max(m1,m2,m3,m4),level);
+        return max(m1,m2,m3,m4);
+    }
+    else
+    {
+        //printf("Min: %d lvl %d\n",min(m1,m2,m3,m4),level);
+        return min(m1,m2,m3,m4);
+    }
+}
+
+void play(Node_t** north,Node_t** south,Node_t** west,Node_t** east,int maxLevel)
+{
+    int socre1=0, score2=0, nor=0,sou=0,wes=0,eas=0;
+    for(int i=0; i<maxLevel; i++)
+    {
+        char moves='\0';
+        int number=0,pozition=0;
+        if(i%2==0)
+            recursion(north,south, west, east,0,socre1,maxLevel-i, &moves);
+        else
+            recursion(north,south, west, east,0,score2,maxLevel-i, &moves);
         
-    }   
-}
-
-
-char best(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int score1, int score2, int player)
-{
-
-    Tree_t* tree=newTree(score1,score2,NULL,-1,'\0');
-    forest(tree,north,south,west,east,0,player);
-    int maxLvl=0;
-    maxLevel(tree,&maxLvl);
-    Tree_t* tmp=tree;
-    search(tree, player ,&tmp, maxLvl);
-    printf("%d /%d\n", tmp->score1, tmp->score2);
-    //printTree(tree, maxLvl);
-    char c= research(tmp);
-    clearTree(tree);
-    return c;
-}
-
-/*PLAY*/
-
-int score(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int *number,int *countNorth, int *coutWest,
-int *countEast, int *coutSouth, char *c, int *pozition, int player, int score1, int score2) 
-{
-    *number=0;
-    *c= best(north,south,west,east,score1,score2, player);  //funkce která vybírá co vyhodit
-    if(*c=='N')
-    {
-        *countNorth+=1;
-        *pozition=*countNorth;
-        return pop(north, number);
-    }
-    if(*c=='S')
-    {
-        *coutSouth+=1;
-        *pozition=*coutSouth;
-        return pop(south, number);
-    }
-    if(*c=='W')
-    {
-        *coutWest+=1;
-        *pozition=*coutWest;
-        return pop(west, number);
-    }
-    if(*c=='E')
-    {
-        *countEast+=1;
-        *pozition=*countEast;
-        return pop(east, number);
-    }
-    if(*c=='\0')
-        return 0;
-    return 0;
-}
-
-void play(Node_t** north, Node_t** south, Node_t** west, Node_t** east, int *score1, int *score2, int player,
-int *countNorth, int *coutWest, int *countEast, int *coutSouth)
-{
-    char c='\0';
-    int number;
-    int pozition=0;
-    if(player==1)
-    {
-        int r = score(north,south,west,east,&number, countNorth, coutWest, countEast, coutSouth,
-                        &c,&pozition, player, *score1, *score2);
-        if(r!=0)
+        if(moves=='N')
         {
-            *score1+=number;
-            printf("A: %c[%d] (%d)\n", c, pozition,number);
-           // printf("------score1 %d/ score2 %d\n"  ,*score1,*score2);
-            play(north,south,west,east,score1,score2,2, countNorth, coutWest, countEast, coutSouth);
+            pop(north,&number);
+            pozition=nor;
+            nor++;
+        }
+        else if(moves=='S')
+        {
+            pop(south,&number);
+            pozition=sou;
+            sou++;
+        }
+        else if(moves=='W')
+        {
+            pop(west,&number);
+            pozition=wes;
+            wes++;
+        }
+        else if(moves=='E')
+        {
+            pop(east,&number);
+            pozition=eas;
+            eas++;
+        }
+        if(i%2==0)
+        {
+            socre1+=number;
+            printf("A: %c[%d] (%d)\n",moves,pozition,number);
+        }
+        else
+        {
+            score2+=number;
+            printf("B: %c[%d] (%d)\n",moves,pozition,number);
         }
     }
-    if(player==2)
-    {
-
-        int r = score(north,south,west,east,&number,countNorth, coutWest, countEast, coutSouth, 
-                        &c,&pozition, player, *score1, *score2);
-        if(r!=0)
-        {
-            *score2+=number;
-            printf("B: %c[%d] (%d)\n", c, pozition,number);
-            //printf("------score1 %d/ score2 %d\n"  ,*score1,*score2);
-            play(north,south,west,east,score1,score2,1,countNorth, coutWest, countEast, coutSouth);
-        }
-    }
-    return;
+    printf("Celkem A/B: %d/%d\n",socre1, score2 );
 }
 
 int main()
 {
-    Node_t* north=NULL;
-    Node_t* south=NULL;
-    Node_t* west=NULL;
-    Node_t* east=NULL;
-    char read[5]; read[0]='\0';
+    Node_t* north=NULL, * south=NULL, * west=NULL, * east=NULL;
+    int total=0, maxLevel=0;
     printf("Zetony:\n");
-    if(input(&north,&south, &west, &east,read) == 0)
-    {
-        printf("Nespravny vstup.\n");
-        printf("%s\n",read);
-        clearAll( north, south, west, east);
-        return 0;
-    }
-    if(input(&north,&south, &west, &east,read)==0)
-    {
-        printf("Nespravny vstup.\n");
-        clearAll( north, south, west, east);
-        return 0;
-    }
-    if(input(&north,&south, &west, &east,read) == 0)
-    {
-        printf("Nespravny vstup.\n");
-        clearAll( north, south, west, east);
-        return 0;
-    }
-    if(input(&north,&south, &west, &east,read) == 0 || north==NULL || south==NULL || east==NULL || west==NULL)
-    {
-        printf("Nespravny vstup.\n");
-        clearAll( north, south, west, east);
-        return 0;
-    }
-    int countNorth=-1, coutWest=-1, countEast=-1, coutSouth=-1;
-    int score1=0, score2=0;
-
-    /*Game*/
-    play(&north,&south,&west,&east,&score1,&score2,1,&countNorth, &coutWest, &countEast, &coutSouth);
-    //best(&north,& south, &west, &east,0,0,1);
-
-    //zkouska stromu
-    printf("Celkem A/B: %d/%d\n",score1,score2);
+    
+    //input
+    char read[5]; read[0]='\0';
+    readInput(&north,&south, &west, &east, &total, &maxLevel,read);
+    readInput(&north,&south, &west, &east, &total, &maxLevel,read);
+    readInput(&north,&south, &west, &east, &total, &maxLevel,read);
+    readInput(&north,&south, &west, &east, &total, &maxLevel,read);
+    //char moves;
+    //int player=recursion(&north,&south, &west, &east,0,0,maxLevel, &moves);
+    
+    play(&north,&south,&west,&east,maxLevel);
     clearAll( north, south, west, east);
     return 0;
 }
